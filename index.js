@@ -1,9 +1,26 @@
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
+const cors = require("cors");
 
 const app = express();
+
+// --- ENABLE CORS FOR ALL ROUTES ---
+app.use(cors());
 app.use(express.json());
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
 
 // --- DB INIT ---
 const db = new sqlite3.Database(path.join(__dirname, "db.sqlite"));
@@ -42,7 +59,6 @@ app.get("/counter", (req, res) => {
 // --- ROUTE POST : incrémenter une fois par IP ---
 app.post("/counter/increment", (req, res) => {
   const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-
   // Incrémenter le compteur
   db.run("UPDATE counters SET value = value + 1 WHERE id = 1", (err3) => {
     if (err3) return res.status(500).json({ error: err3.message });
