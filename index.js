@@ -61,12 +61,10 @@ app.post("/counter/increment", (req, res) => {
   const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
   // max per ip
-  const MAX_PER_IP = 10;
-
   // Vérifier si l'IP a déjà atteint la limite
   db.get("SELECT COUNT(*) AS count FROM ip_logs WHERE ip = ?", [ip], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (row.count >= MAX_PER_IP) {
+    if (row.count >= 1) {
       return res.status(429).json({ error: "Limite d'incrémentation atteinte pour cette IP." });
     }
 
