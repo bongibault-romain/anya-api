@@ -77,11 +77,11 @@ app.post("/counter/increment", (req, res) => {
       // Enregistrer l'IP
       db.run("INSERT INTO ip_logs (ip) VALUES (?)", [ip], (err4) => {
         if (err4) return res.status(500).json({ error: err4.message });
-      });
-
-      // Retourner la nouvelle valeur
-      db.get("SELECT value FROM counters WHERE id = 1", (err4, row2) => {
-        res.json({ counter: row2.value });
+        
+        // Retourner la nouvelle valeur
+        db.get("SELECT value FROM counters WHERE id = 1", (err4, row2) => {
+          res.json({ counter: row2.value });
+        });
       });
     });
   });
