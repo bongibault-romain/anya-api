@@ -59,13 +59,25 @@ app.get("/counter", (req, res) => {
 // --- ROUTE POST : incrémenter une fois par IP ---
 app.post("/counter/increment", (req, res) => {
   const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-  // Incrémenter le compteur
-  db.run("UPDATE counters SET value = value + 1 WHERE id = 1", (err3) => {
-    if (err3) return res.status(500).json({ error: err3.message });
 
-    // Retourner la nouvelle valeur
-    db.get("SELECT value FROM counters WHERE id = 1", (err4, row2) => {
-      res.json({ counter: row2.value });
+  // max per ip
+  const MAX_PER_IP = 10;
+
+  // Vérifier si l'IP a déjà atteint la limite
+  db.get("SELECT COUNT(*) AS count FROM ip_logs WHERE ip = ?", [ip], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (row.count >= MAX_PER_IP) {
+      return res.status(429).json({ error: "Limite d'incrémentation atteinte pour cette IP." });
+    }
+
+    // Incrémenter le compteur
+    db.run("UPDATE counters SET value = value + 1 WHERE id = 1", (err3) => {
+      if (err3) return res.status(500).json({ error: err3.message });
+
+      // Retourner la nouvelle valeur
+      db.get("SELECT value FROM counters WHERE id = 1", (err4, row2) => {
+        res.json({ counter: row2.value });
+      });
     });
   });
 });
